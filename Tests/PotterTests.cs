@@ -70,6 +70,13 @@ namespace Tests
             AssertPrice(price, expectedPrice);
         }
 
+        [TestCase("AABBCCDE", 2 * (4 * UnitBookPrice * 0.80d))] // = ABCDE + ABC or ABCD + ABCE
+        public void EdgeCaseIsPricedCorrectly(string books, double expectedPrice)
+        {
+            var price = CalculatePriceForBooks(books);
+            AssertPrice(price, expectedPrice);
+        }
+
         private static void AssertPrice(double actualPrice, double expectedPrice)
         {
             Assert.That(actualPrice, Is.EqualTo(expectedPrice));
