@@ -13,7 +13,7 @@ namespace Tests
         public void NoBooksCostZero()
         {
             var price = CalculatePriceForBooks(string.Empty);
-            Assert.That(price, Is.EqualTo(0d));
+            AssertPrice(price, 0 * UnitBookPrice);
         }
 
         [TestCase("A")]
@@ -24,7 +24,7 @@ namespace Tests
         public void ASingleBookIsPricedCorrectly(string books)
         {
             var price = CalculatePriceForBooks(books);
-            Assert.That(price, Is.EqualTo(UnitBookPrice));
+            AssertPrice(price, 1 * UnitBookPrice);
         }
 
         [TestCase("AA", 2 * UnitBookPrice)]
@@ -43,7 +43,7 @@ namespace Tests
         public void MultipleBooksOfTheSameTypeArePricedCorrectly(string books, double expectedPrice)
         {
             var price = CalculatePriceForBooks(books);
-            Assert.That(price, Is.EqualTo(expectedPrice));
+            AssertPrice(price, expectedPrice);
         }
 
         [TestCase("AB", 2 * UnitBookPrice * 0.95d)]
@@ -57,12 +57,12 @@ namespace Tests
         public void MultipleBooksOfDifferentTypesArePricedCorrectly(string books, double expectedPrice)
         {
             var price = CalculatePriceForBooks(books);
-            Assert.That(price, Is.EqualTo(RoundUp(expectedPrice)));
+            AssertPrice(price, expectedPrice);
         }
 
-        private static double RoundUp(double d)
+        private static void AssertPrice(double actualPrice, double expectedPrice)
         {
-            return System.Math.Round(d, 2);
+            Assert.That(actualPrice, Is.EqualTo(expectedPrice.RoundUp()));
         }
 
         private readonly static IDictionary<int, int> NumDifferentItems2PercentDiscount = new Dictionary<int, int>
@@ -82,8 +82,8 @@ namespace Tests
 
             if (books.ToCharArray().Distinct().Count() == numBooks)
             {
-                var percentDiscount = NumDifferentItems2PercentDiscount[numBooks];
-                price = (numBooks * UnitBookPrice) / 100 * (100 - percentDiscount);
+                var discount = NumDifferentItems2PercentDiscount[numBooks];
+                price = (numBooks * UnitBookPrice).PercentOff(discount);
             }
 
             if (!price.HasValue)
@@ -91,7 +91,20 @@ namespace Tests
                 price = numBooks * UnitBookPrice;
             }
 
-            return RoundUp(price.Value);
+            return price.Value.RoundUp();
+        }
+    }
+
+    internal static class DoubleExtensions
+    {
+        public static double RoundUp(this double d)
+        {
+            return System.Math.Round(d, 2);
+        }
+
+        public static double PercentOff(this double d, int p)
+        {
+            return d / 100 * (100 - p);
         }
     }
 }
