@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -60,12 +61,22 @@ namespace Tests
             AssertPrice(price, expectedPrice);
         }
 
+        [TestCase("AAB", UnitBookPrice + (2 * UnitBookPrice * 0.95d))]
+        [TestCase("AABB", 2 * (2 * UnitBookPrice * 0.95d))]
+        [TestCase("AABCCD", (4 * UnitBookPrice * 0.80d) + (2 * UnitBookPrice * 0.95d))]
+        [TestCase("ABBCDE", UnitBookPrice + (5 * UnitBookPrice * 0.75d))]
+        public void SimpleDiscountCombinationsArePricedCorrectly(string books, double expectedPrice)
+        {
+            var price = CalculatePriceForBooks(books);
+            AssertPrice(price, expectedPrice);
+        }
+
         private static void AssertPrice(double actualPrice, double expectedPrice)
         {
             Assert.That(actualPrice, Is.EqualTo(expectedPrice.RoundUp()));
         }
 
-        private readonly static IDictionary<int, int> NumDifferentItems2PercentDiscount = new Dictionary<int, int>
+        private readonly static IDictionary<int, int> NumDifferentBooks2PercentDiscount = new Dictionary<int, int>
             {
                 {0, 0},
                 {1, 0},
@@ -75,23 +86,29 @@ namespace Tests
                 {5, 25}
             };
 
+        private static IEnumerable<char> ExtractLargestDistinctSetOfBooks(ICollection<char> books)
+        {
+            var distinctSetOfBooks = books.Distinct().ToList();
+            foreach (var book in distinctSetOfBooks) books.Remove(book);
+            return distinctSetOfBooks;
+        }
+
         private static double CalculatePriceForBooks(string books)
         {
-            var numBooks = books.Length;
-            double? price = null;
+            double total = 0;
+            var remainingBooks = books.ToCharArray().ToList();
 
-            if (books.ToCharArray().Distinct().Count() == numBooks)
+            for (;;)
             {
-                var discount = NumDifferentItems2PercentDiscount[numBooks];
-                price = (numBooks * UnitBookPrice).PercentOff(discount);
+                var distinctSetOfBooks = ExtractLargestDistinctSetOfBooks(remainingBooks);
+                var numDifferentBooks = distinctSetOfBooks.Count();
+                if (numDifferentBooks == 0) break;
+                var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
+                var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
+                total += subTotal;
             }
 
-            if (!price.HasValue)
-            {
-                price = numBooks * UnitBookPrice;
-            }
-
-            return price.Value.RoundUp();
+            return total.RoundUp();
         }
     }
 
@@ -99,7 +116,7 @@ namespace Tests
     {
         public static double RoundUp(this double d)
         {
-            return System.Math.Round(d, 2);
+            return Math.Round(d, 2);
         }
 
         public static double PercentOff(this double d, int p)
