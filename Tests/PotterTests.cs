@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -73,7 +72,7 @@ namespace Tests
 
         private static void AssertPrice(double actualPrice, double expectedPrice)
         {
-            Assert.That(actualPrice, Is.EqualTo(expectedPrice.RoundUp()));
+            Assert.That(actualPrice, Is.EqualTo(expectedPrice));
         }
 
         private readonly static IDictionary<int, int> NumDifferentBooks2PercentDiscount = new Dictionary<int, int>
@@ -108,20 +107,15 @@ namespace Tests
                 total += subTotal;
             }
 
-            return total.RoundUp();
+            return total;
         }
     }
 
     internal static class DoubleExtensions
     {
-        public static double RoundUp(this double d)
-        {
-            return Math.Round(d, 2);
-        }
-
         public static double PercentOff(this double d, int p)
         {
-            return d / 100 * (100 - p);
+            return d - (d * p / 100);
         }
     }
 }
