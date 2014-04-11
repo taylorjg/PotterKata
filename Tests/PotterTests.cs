@@ -24,22 +24,30 @@ namespace Tests
             Assert.That(price, Is.EqualTo(8));
         }
 
-        [TestCase("AB", 2 * 8)]
-        public void MultipleBooksOfDifferentTypesArePricedCorrectly(string books, double expectedPrice)
+        [TestCase("AA", 2 * 8)]
+        [TestCase("AAA", 3 * 8)]
+        [TestCase("AAAA", 4 * 8)]
+        [TestCase("AAAAA", 5 * 8)]
+        [TestCase("BB", 2 * 8)]
+        [TestCase("BBB", 3 * 8)]
+        [TestCase("BBBB", 4 * 8)]
+        [TestCase("BBBBB", 5 * 8)]
+        [TestCase("AAAAAA", 6 * 8)]
+        [TestCase("AAAAAAA", 7 * 8)]
+        [TestCase("AAAAAAAA", 8 * 8)]
+        [TestCase("AAAAAAAAA", 9 * 8)]
+        [TestCase("AAAAAAAAAA", 10 * 8)]
+        public void MultipleBooksOfTheSameTypeArePricedCorrectly(string books, double expectedPrice)
         {
             var price = CalculatePriceForBooks(books);
             Assert.That(price, Is.EqualTo(expectedPrice));
         }
 
-        [TestCase("AA", 2 * 8 * 0.95)]
-        [TestCase("AAA", 3 * 8 * 0.90)]
-        [TestCase("AAAA", 4 * 8 * 0.80)]
-        [TestCase("AAAAA", 5 * 8 * 0.75)]
-        [TestCase("BB", 2 * 8 * 0.95)]
-        [TestCase("BBB", 3 * 8 * 0.90)]
-        [TestCase("BBBB", 4 * 8 * 0.80)]
-        [TestCase("BBBBB", 5 * 8 * 0.75)]
-        public void MultipleBooksOfTheSameTypeArePricedCorrectly(string books, double expectedPrice)
+        [TestCase("AB", 2 * 8 * 0.95)]
+        [TestCase("ABC", 3 * 8 * 0.90)]
+        [TestCase("ABCD", 4 * 8 * 0.80)]
+        [TestCase("ABCDE", 5 * 8 * 0.75)]
+        public void MultipleBooksOfDifferentTypesArePricedCorrectly(string books, double expectedPrice)
         {
             var price = CalculatePriceForBooks(books);
             Assert.That(price, Is.EqualTo(expectedPrice));
@@ -49,7 +57,7 @@ namespace Tests
         {
             var numBooks = books.Length;
 
-            if (books.ToCharArray().Distinct().Count() == 1)
+            if (books.ToCharArray().Distinct().Count() == numBooks)
             {
                 switch (numBooks)
                 {
