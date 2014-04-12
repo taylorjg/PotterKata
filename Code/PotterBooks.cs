@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Code
@@ -17,9 +18,11 @@ namespace Code
                 {5, 25}
             };
 
-        public static double CalculateSubTotalFor(IEnumerable<char> setOfBooks)
+        internal static double CalculateSubTotalForSetOfDifferentBooks(IEnumerable<char> setOfBooks)
         {
-            var numDifferentBooks = setOfBooks.Count();
+            var setOfBooksAsList = setOfBooks.ToList();
+            Debug.Assert(setOfBooksAsList.Count() == setOfBooksAsList.Distinct().Count());
+            var numDifferentBooks = setOfBooksAsList.Count();
             var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
             var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
             return subTotal;
@@ -27,34 +30,34 @@ namespace Code
 
         private static double CalculatePriceByConsideringCombinations(IEnumerable<char> books)
         {
-            var things = new List<Thing> { new Thing(books) };
+            var bookCalculations = new List<BookCalculation> { new BookCalculation(books) };
 
             for (; ; )
             {
                 var done = true;
 
-                var thingsToRemove = new List<Thing>();
-                var thingsToAdd = new List<Thing>();
+                var bookCalculationsToRemove = new List<BookCalculation>();
+                var bookCalculationsToAdd = new List<BookCalculation>();
 
-                foreach (var thing in things)
+                foreach (var bookCalculation in bookCalculations)
                 {
-                    var newThings = thing.Step().ToList();
-                    if (newThings.Any())
+                    var newBookCalculations = bookCalculation.ProcessCombinations().ToList();
+                    if (newBookCalculations.Any())
                     {
-                        thingsToAdd.AddRange(newThings);
-                        thingsToRemove.Add(thing);
+                        bookCalculationsToAdd.AddRange(newBookCalculations);
+                        bookCalculationsToRemove.Add(bookCalculation);
                         done = false;
                     }
                 }
 
-                foreach (var thing in thingsToRemove) things.Remove(thing);
-                things.AddRange(thingsToAdd);
+                foreach (var bookCalculation in bookCalculationsToRemove) bookCalculations.Remove(bookCalculation);
+                bookCalculations.AddRange(bookCalculationsToAdd);
 
                 if (done) break;
             }
 
-            var thingWithTheSmallestTotal = things.MinBy(x => x.Total);
-            return thingWithTheSmallestTotal.Total;
+            var bookCalculationWithTheSmallestTotal = bookCalculations.MinBy(x => x.Total);
+            return bookCalculationWithTheSmallestTotal.Total;
         }
 
         public static double CalculatePriceFor(string books)
