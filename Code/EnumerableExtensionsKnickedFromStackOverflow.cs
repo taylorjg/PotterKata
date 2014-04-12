@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tests
+namespace Code
 {
     public static class EnumerableExtensionsKnickedFromStackOverflow
     {

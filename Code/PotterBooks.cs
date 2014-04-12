@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Tests
+namespace Code
 {
     public static class PotterBooks
     {
@@ -13,29 +13,33 @@ namespace Tests
 
             for (; ; )
             {
-                var keepGoing = false;
+                var done = true;
+
                 var thingsToRemove = new List<Thing>();
-                var overallNewThings = new List<Thing>();
+                var thingsToAdd = new List<Thing>();
+
                 foreach (var thing in things)
                 {
                     var newThings = thing.Step().ToList();
                     if (newThings.Any())
                     {
-                        overallNewThings.AddRange(newThings);
+                        thingsToAdd.AddRange(newThings);
                         thingsToRemove.Add(thing);
-                        keepGoing = true;
+                        done = false;
                     }
                 }
+
                 foreach (var thing in thingsToRemove) things.Remove(thing);
-                things.AddRange(overallNewThings);
-                if (!keepGoing) break;
+                things.AddRange(thingsToAdd);
+
+                if (done) break;
             }
 
             var thingWithTheSmallestTotal = things.MinBy(x => x.Total);
             return thingWithTheSmallestTotal.Total;
         }
 
-        public static double CalculatePriceForBooks(string books)
+        public static double CalculatePriceFor(string books)
         {
             return CalculatePriceByConsideringCombinations(books.ToCharArray());
         }

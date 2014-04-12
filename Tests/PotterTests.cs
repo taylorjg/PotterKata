@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Code;
+using NUnit.Framework;
 
 namespace Tests
 {
@@ -8,7 +9,7 @@ namespace Tests
         [Test]
         public void NoBooksCostZero()
         {
-            var price = PotterBooks.CalculatePriceForBooks(string.Empty);
+            var price = PotterBooks.CalculatePriceFor(string.Empty);
             AssertPrice(price, 0 * PotterBooks.UnitBookPrice);
         }
 
@@ -19,7 +20,7 @@ namespace Tests
         [TestCase("E")]
         public void ASingleBookIsPricedCorrectly(string books)
         {
-            var price = PotterBooks.CalculatePriceForBooks(books);
+            var price = PotterBooks.CalculatePriceFor(books);
             AssertPrice(price, 1 * PotterBooks.UnitBookPrice);
         }
 
@@ -38,7 +39,7 @@ namespace Tests
         [TestCase("AAAAAAAAAA", 10 * PotterBooks.UnitBookPrice)]
         public void MultipleBooksOfTheSameTypeArePricedCorrectly(string books, double expectedPrice)
         {
-            var price = PotterBooks.CalculatePriceForBooks(books);
+            var price = PotterBooks.CalculatePriceFor(books);
             AssertPrice(price, expectedPrice);
         }
 
@@ -52,7 +53,7 @@ namespace Tests
         [TestCase("EDCBA", 5 * PotterBooks.UnitBookPrice * 0.75d)]
         public void MultipleBooksOfDifferentTypesArePricedCorrectly(string books, double expectedPrice)
         {
-            var price = PotterBooks.CalculatePriceForBooks(books);
+            var price = PotterBooks.CalculatePriceFor(books);
             AssertPrice(price, expectedPrice);
         }
 
@@ -62,7 +63,7 @@ namespace Tests
         [TestCase("ABBCDE", PotterBooks.UnitBookPrice + (5 * PotterBooks.UnitBookPrice * 0.75d))]
         public void SimpleDiscountCombinationsArePricedCorrectly(string books, double expectedPrice)
         {
-            var price = PotterBooks.CalculatePriceForBooks(books);
+            var price = PotterBooks.CalculatePriceFor(books);
             AssertPrice(price, expectedPrice);
         }
 
@@ -70,7 +71,7 @@ namespace Tests
         [TestCase("AAAAABBBBBCCCCDDDDDEEEE", (3 * (5 * PotterBooks.UnitBookPrice * 0.75d)) + (2 * (4 * PotterBooks.UnitBookPrice * 0.80d)))] // = ABCDE + ABCDE + ABCDE + ABCD + ABDE
         public void EdgeCaseIsPricedCorrectly(string books, double expectedPrice)
         {
-            var price = PotterBooks.CalculatePriceForBooks(books);
+            var price = PotterBooks.CalculatePriceFor(books);
             AssertPrice(price, expectedPrice);
         }
 
