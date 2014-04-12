@@ -7,6 +7,24 @@ namespace Code
     {
         public const double UnitBookPrice = 8d;
 
+        private readonly static IDictionary<int, int> NumDifferentBooks2PercentDiscount = new Dictionary<int, int>
+            {
+                {0, 0},
+                {1, 0},
+                {2, 5},
+                {3, 10},
+                {4, 20},
+                {5, 25}
+            };
+
+        public static double CalculateSubTotalFor(IEnumerable<char> setOfBooks)
+        {
+            var numDifferentBooks = setOfBooks.Count();
+            var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
+            var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
+            return subTotal;
+        }
+
         private static double CalculatePriceByConsideringCombinations(IEnumerable<char> books)
         {
             var things = new List<Thing> { new Thing(books) };
