@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -92,56 +93,122 @@ namespace Tests
                 {5, 25}
             };
 
-        private static IEnumerable<char> ExtractDistinctSetOfBooks(ICollection<char> books, int size)
+        private static double CalculateSubTotalForSetOfBooks(ICollection<char> books, IList<char> setOfBooks)
         {
-            var distinctSetOfBooks = books.Distinct().ToList();
-            var diff = distinctSetOfBooks.Count() - size;
-            if (diff < 0)
-            {
-                return Enumerable.Empty<char>();
-            }
-            if (diff > 0)
-            {
-                distinctSetOfBooks.RemoveRange(0, diff);
-            }
-            foreach (var book in distinctSetOfBooks) books.Remove(book);
-            return distinctSetOfBooks;
+            var numDifferentBooks = setOfBooks.Count();
+            var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
+            var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
+            foreach (var book in setOfBooks) books.Remove(book);
+            return subTotal;
         }
 
-        private static int GetSizeOfLargestDistinctSetOfBooks(IEnumerable<char> books)
+        private class Thing
         {
-            return books.Distinct().Count();
+            private readonly IList<Tuple<string, double>> _items;
+
+            public Thing(IEnumerable<char> remainingBooks)
+            {
+                RemainingBooks = new List<char>(remainingBooks);
+                _items = new List<Tuple<string, double>>();
+            }
+
+            private Thing(IEnumerable<char> remainingBooks, IEnumerable<Tuple<string, double>> items)
+            {
+                RemainingBooks = new List<char>(remainingBooks);
+                _items = new List<Tuple<string, double>>(items);
+            }
+
+            public IList<char> RemainingBooks { get; private set; }
+
+            public void AddItem(IEnumerable<char> setOfBooks, double subTotal)
+            {
+                _items.Add(Tuple.Create(new string(setOfBooks.ToArray()), subTotal));
+            }
+
+            public double Total
+            {
+                get { return _items.Sum(x => x.Item2); }
+            }
+
+            public Thing Clone()
+            {
+                return new Thing(RemainingBooks, _items);
+            }
         }
 
-        private static double CalculatePriceByRepeatedlyApplyingBiggestDiscount(ICollection<char> books)
+        private static IEnumerable<Thing> RecursiveStep(Thing thing)
         {
-            double total = 0;
+            var combinations =
+                Enumerable.Range(2, 5)
+                          .Aggregate(
+                              Enumerable.Empty<IEnumerable<char>>(),
+                              (acc, i) =>
+                              acc.Concat(Enumerable.Repeat(thing.RemainingBooks, i).Combinations()))
+                          .ToList();
+
+            if (combinations.Any())
+            {
+                var newThings = new List<Thing>();
+                foreach (var combination in combinations.Select(x => x.ToList()))
+                {
+                    var newThing = thing.Clone();
+                    var subTotal = CalculateSubTotalForSetOfBooks(newThing.RemainingBooks, combination);
+                    newThing.AddItem(combination, subTotal);
+                    newThings.Add(newThing);
+                }
+                return newThings;
+            }
+
+            {
+                var subTotal = thing.RemainingBooks.Count() * UnitBookPrice;
+                thing.AddItem(thing.RemainingBooks, subTotal);
+                thing.RemainingBooks.Clear();
+                return Enumerable.Empty<Thing>();
+            }
+        }
+
+        private static double CalculatePriceByConsideringCombinations(IEnumerable<char> books)
+        {
+            var things = new List<Thing> {new Thing(books)};
+
             for (;;)
             {
-                var sizeOfLargestDistinctSetOfBooks = GetSizeOfLargestDistinctSetOfBooks(books);
-                var distinctSetOfBooks = ExtractDistinctSetOfBooks(books, sizeOfLargestDistinctSetOfBooks);
-                var numDifferentBooks = distinctSetOfBooks.Count();
-                if (numDifferentBooks == 0) break;
-                var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
-                var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
-                total += subTotal;
+                var keepGoing = false;
+                var thingsToRemove = new List<Thing>();
+                var overallNewThings = new List<Thing>();
+                foreach (var thing in things)
+                {
+                    var newThings = RecursiveStep(thing).ToList();
+                    if (newThings.Any())
+                    {
+                        overallNewThings.AddRange(newThings);
+                        thingsToRemove.Add(thing);
+                        keepGoing = true;
+                    }
+                }
+                foreach (var thing in thingsToRemove) things.Remove(thing);
+                things.AddRange(overallNewThings);
+                if (!keepGoing) break;
             }
-            return total;
-        }
 
-        private static double CalculatePriceBySomethingMoreCunning(ICollection<char> books)
-        {
-            return CalculatePriceByRepeatedlyApplyingBiggestDiscount(books);
+            var calculationWithTheSmallestTotal = things.First();
+            var smallestTotal = things.First().Total;
+
+            foreach (var thing in things)
+            {
+                if (thing.Total < smallestTotal)
+                {
+                    smallestTotal = thing.Total;
+                    calculationWithTheSmallestTotal = thing;
+                }
+            }
+
+            return calculationWithTheSmallestTotal.Total;
         }
 
         private static double CalculatePriceForBooks(string books)
         {
-            var prices = new List<double>
-                {
-                    CalculatePriceByRepeatedlyApplyingBiggestDiscount(books.ToCharArray().ToList()),
-                    CalculatePriceBySomethingMoreCunning(books.ToCharArray().ToList())
-                };
-            return prices.Min();
+            return CalculatePriceByConsideringCombinations(books.ToCharArray());
         }
     }
 
@@ -150,6 +217,24 @@ namespace Tests
         public static double PercentOff(this double d, int p)
         {
             return d - (d * p / 100);
+        }
+    }
+
+    internal static class CombinationsFromStackOverflow
+    {
+        // http://stackoverflow.com/questions/5980810/generate-all-unique-combinations-of-elements-of-a-ienumerableof-t
+        public static IEnumerable<IEnumerable<T>> Combinations<T>(this IEnumerable<IEnumerable<T>> sequences)
+        {
+            IEnumerable<IEnumerable<T>> emptyProduct = new[] { Enumerable.Empty<T>() };
+            return sequences.Aggregate(
+                emptyProduct,
+                (accumulator, sequence) =>
+                from accseq in accumulator
+                // Exclude items that were already picked
+                from item in sequence.Except(accseq)
+                // Enforce ascending order to avoid same sequence in different order
+                where !accseq.Any() || Comparer<T>.Default.Compare(item, accseq.Last()) > 0
+                select accseq.Concat(new[] { item })).ToArray();
         }
     }
 }
