@@ -93,12 +93,11 @@ namespace Tests
                 {5, 25}
             };
 
-        private static double CalculateSubTotalForSetOfBooks(ICollection<char> books, IList<char> setOfBooks)
+        private static double CalculateSubTotalFor(IEnumerable<char> setOfBooks)
         {
             var numDifferentBooks = setOfBooks.Count();
             var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
             var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
-            foreach (var book in setOfBooks) books.Remove(book);
             return subTotal;
         }
 
@@ -119,23 +118,24 @@ namespace Tests
                     combinations = combinations.Where(x => x.Count() >= 4).ToList();
                 }
                 var newThings = new List<Thing>();
-                foreach (var combination in combinations
-                    .Select(x => x.ToList()))
+                foreach (var setOfBooks in combinations.Select(x => x.ToList()))
                 {
+                    var subTotal = CalculateSubTotalFor(setOfBooks);
                     var newThing = thing.Clone();
-                    var subTotal = CalculateSubTotalForSetOfBooks(newThing.RemainingBooks, combination);
-                    newThing.AddItem(combination, subTotal);
+                    newThing.AddSubTotal(setOfBooks, subTotal);
                     newThings.Add(newThing);
                 }
                 return newThings;
             }
 
+            var numBooks = thing.RemainingBooks.Count();
+            if (numBooks > 0)
             {
-                var subTotal = thing.RemainingBooks.Count() * UnitBookPrice;
-                thing.AddItem(thing.RemainingBooks, subTotal);
-                thing.RemainingBooks.Clear();
-                return Enumerable.Empty<Thing>();
+                var subTotal = numBooks * UnitBookPrice;
+                thing.AddSubTotal(thing.RemainingBooks, subTotal);
             }
+
+            return Enumerable.Empty<Thing>();
         }
 
         private static double CalculatePriceByConsideringCombinations(IEnumerable<char> books)
