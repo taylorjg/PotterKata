@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -71,7 +70,8 @@ namespace Tests
             AssertPrice(price, expectedPrice);
         }
 
-        [TestCase("AABBCCDE", 2 * (4 * UnitBookPrice * 0.80d))] // = ABCDE + ABC or ABCD + ABCE
+        [TestCase("AABBCCDE", 2 * (4 * UnitBookPrice * 0.80d))] // = ABCD + ABCE
+        [TestCase("AAAAABBBBBCCCCDDDDDEEEE", (3 * (5 * UnitBookPrice * 0.75d)) + (2 * (4 * UnitBookPrice * 0.80d)))] // = ABCDE + ABCDE + ABCDE + ABCD + ABDE
         public void EdgeCaseIsPricedCorrectly(string books, double expectedPrice)
         {
             var price = CalculatePriceForBooks(books);
@@ -102,41 +102,7 @@ namespace Tests
             return subTotal;
         }
 
-        private class Thing
-        {
-            private readonly IList<Tuple<string, double>> _items;
-
-            public Thing(IEnumerable<char> remainingBooks)
-            {
-                RemainingBooks = new List<char>(remainingBooks);
-                _items = new List<Tuple<string, double>>();
-            }
-
-            private Thing(IEnumerable<char> remainingBooks, IEnumerable<Tuple<string, double>> items)
-            {
-                RemainingBooks = new List<char>(remainingBooks);
-                _items = new List<Tuple<string, double>>(items);
-            }
-
-            public IList<char> RemainingBooks { get; private set; }
-
-            public void AddItem(IEnumerable<char> setOfBooks, double subTotal)
-            {
-                _items.Add(Tuple.Create(new string(setOfBooks.ToArray()), subTotal));
-            }
-
-            public double Total
-            {
-                get { return _items.Sum(x => x.Item2); }
-            }
-
-            public Thing Clone()
-            {
-                return new Thing(RemainingBooks, _items);
-            }
-        }
-
-        private static IEnumerable<Thing> RecursiveStep(Thing thing)
+        private static IEnumerable<Thing> ThingStep(Thing thing)
         {
             var combinations =
                 Enumerable.Range(2, 5)
@@ -148,8 +114,13 @@ namespace Tests
 
             if (combinations.Any())
             {
+                if (combinations.Any(x => x.Count() >= 4))
+                {
+                    combinations = combinations.Where(x => x.Count() >= 4).ToList();
+                }
                 var newThings = new List<Thing>();
-                foreach (var combination in combinations.Select(x => x.ToList()))
+                foreach (var combination in combinations
+                    .Select(x => x.ToList()))
                 {
                     var newThing = thing.Clone();
                     var subTotal = CalculateSubTotalForSetOfBooks(newThing.RemainingBooks, combination);
@@ -178,7 +149,7 @@ namespace Tests
                 var overallNewThings = new List<Thing>();
                 foreach (var thing in things)
                 {
-                    var newThings = RecursiveStep(thing).ToList();
+                    var newThings = ThingStep(thing).ToList();
                     if (newThings.Any())
                     {
                         overallNewThings.AddRange(newThings);
@@ -191,50 +162,13 @@ namespace Tests
                 if (!keepGoing) break;
             }
 
-            var calculationWithTheSmallestTotal = things.First();
-            var smallestTotal = things.First().Total;
-
-            foreach (var thing in things)
-            {
-                if (thing.Total < smallestTotal)
-                {
-                    smallestTotal = thing.Total;
-                    calculationWithTheSmallestTotal = thing;
-                }
-            }
-
-            return calculationWithTheSmallestTotal.Total;
+            var thingWithTheSmallestTotal = things.MinBy(x => x.Total);
+            return thingWithTheSmallestTotal.Total;
         }
 
         private static double CalculatePriceForBooks(string books)
         {
             return CalculatePriceByConsideringCombinations(books.ToCharArray());
-        }
-    }
-
-    internal static class DoubleExtensions
-    {
-        public static double PercentOff(this double d, int p)
-        {
-            return d - (d * p / 100);
-        }
-    }
-
-    internal static class CombinationsFromStackOverflow
-    {
-        // http://stackoverflow.com/questions/5980810/generate-all-unique-combinations-of-elements-of-a-ienumerableof-t
-        public static IEnumerable<IEnumerable<T>> Combinations<T>(this IEnumerable<IEnumerable<T>> sequences)
-        {
-            IEnumerable<IEnumerable<T>> emptyProduct = new[] { Enumerable.Empty<T>() };
-            return sequences.Aggregate(
-                emptyProduct,
-                (accumulator, sequence) =>
-                from accseq in accumulator
-                // Exclude items that were already picked
-                from item in sequence.Except(accseq)
-                // Enforce ascending order to avoid same sequence in different order
-                where !accseq.Any() || Comparer<T>.Default.Compare(item, accseq.Last()) > 0
-                select accseq.Concat(new[] { item })).ToArray();
         }
     }
 }
