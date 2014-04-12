@@ -92,29 +92,56 @@ namespace Tests
                 {5, 25}
             };
 
-        private static IEnumerable<char> ExtractLargestDistinctSetOfBooks(ICollection<char> books)
+        private static IEnumerable<char> ExtractDistinctSetOfBooks(ICollection<char> books, int size)
         {
             var distinctSetOfBooks = books.Distinct().ToList();
+            var diff = distinctSetOfBooks.Count() - size;
+            if (diff < 0)
+            {
+                return Enumerable.Empty<char>();
+            }
+            if (diff > 0)
+            {
+                distinctSetOfBooks.RemoveRange(0, diff);
+            }
             foreach (var book in distinctSetOfBooks) books.Remove(book);
             return distinctSetOfBooks;
         }
 
-        private static double CalculatePriceForBooks(string books)
+        private static int GetSizeOfLargestDistinctSetOfBooks(IEnumerable<char> books)
+        {
+            return books.Distinct().Count();
+        }
+
+        private static double CalculatePriceByRepeatedlyApplyingBiggestDiscount(ICollection<char> books)
         {
             double total = 0;
-            var remainingBooks = books.ToCharArray().ToList();
-
             for (;;)
             {
-                var distinctSetOfBooks = ExtractLargestDistinctSetOfBooks(remainingBooks);
+                var sizeOfLargestDistinctSetOfBooks = GetSizeOfLargestDistinctSetOfBooks(books);
+                var distinctSetOfBooks = ExtractDistinctSetOfBooks(books, sizeOfLargestDistinctSetOfBooks);
                 var numDifferentBooks = distinctSetOfBooks.Count();
                 if (numDifferentBooks == 0) break;
                 var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
                 var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
                 total += subTotal;
             }
-
             return total;
+        }
+
+        private static double CalculatePriceBySomethingMoreCunning(ICollection<char> books)
+        {
+            return CalculatePriceByRepeatedlyApplyingBiggestDiscount(books);
+        }
+
+        private static double CalculatePriceForBooks(string books)
+        {
+            var prices = new List<double>
+                {
+                    CalculatePriceByRepeatedlyApplyingBiggestDiscount(books.ToCharArray().ToList()),
+                    CalculatePriceBySomethingMoreCunning(books.ToCharArray().ToList())
+                };
+            return prices.Min();
         }
     }
 
