@@ -45,25 +45,17 @@ namespace Code
         {
             var bookCalculations = new List<BookCalculation> { new BookCalculation(books) };
 
-            for (; ; )
+            for (; bookCalculations.Any(x => x.HasRemainingBooks);)
             {
-                var done = true;
+                var newBookCalculations = new List<BookCalculation>();
 
-                var bookCalculationsToRemove = new List<BookCalculation>();
-                var bookCalculationsToAdd = new List<BookCalculation>();
-
-                foreach (var bookCalculation in bookCalculations.Where(x => !x.IsDone))
+                foreach (var bookCalculation in bookCalculations.Where(x => x.HasRemainingBooks))
                 {
-                    var newBookCalculations = bookCalculation.FindSingleDiscountCombinations();
-                    bookCalculationsToRemove.Add(bookCalculation);
-                    bookCalculationsToAdd.AddRange(newBookCalculations);
-                    done = false;
+                    newBookCalculations.AddRange(bookCalculation.FindCombinationsOfNextSetOfBooks());
                 }
 
-                bookCalculations.RemoveRange(bookCalculationsToRemove);
-                bookCalculations.AddRange(bookCalculationsToAdd);
-
-                if (done) break;
+                bookCalculations.RemoveAll(x => x.HasRemainingBooks);
+                bookCalculations.AddRange(newBookCalculations);
             }
 
             var bookCalculationWithTheSmallestTotal = bookCalculations.MinBy(x => x.Total);
