@@ -21,10 +21,11 @@ namespace Code
         internal static double CalculateSubTotalForSetOfDifferentBooks(IEnumerable<char> setOfBooks)
         {
             var setOfBooksAsList = setOfBooks.ToList();
-            Debug.Assert(setOfBooksAsList.Count() == setOfBooksAsList.Distinct().Count());
-            var numDifferentBooks = setOfBooksAsList.Count();
-            var percentDiscount = NumDifferentBooks2PercentDiscount[numDifferentBooks];
-            var subTotal = (UnitBookPrice * numDifferentBooks).PercentOff(percentDiscount);
+            var numBooks = setOfBooksAsList.Count();
+            var numDistinctBooks = setOfBooksAsList.Distinct().Count();
+            Debug.Assert(numBooks == numDistinctBooks);
+            var percentDiscount = NumDifferentBooks2PercentDiscount[numBooks];
+            var subTotal = (numBooks * UnitBookPrice).PercentOff(percentDiscount);
             return subTotal;
         }
 
