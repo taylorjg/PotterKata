@@ -40,7 +40,7 @@ namespace Code
                 var bookCalculationsToRemove = new List<BookCalculation>();
                 var bookCalculationsToAdd = new List<BookCalculation>();
 
-                foreach (var bookCalculation in bookCalculations)
+                foreach (var bookCalculation in bookCalculations.Where(x => !x.IsDone))
                 {
                     var newBookCalculations = bookCalculation.FindSingleDiscountCombinations();
                     if (newBookCalculations.Any())

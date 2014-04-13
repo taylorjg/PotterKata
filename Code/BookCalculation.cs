@@ -26,6 +26,11 @@ namespace Code
             get { return _subTotals.Sum(x => x.Item2); }
         }
 
+        public bool IsDone
+        {
+            get { return !_remainingItems.Any(); }
+        }
+
         public BookCalculation Clone()
         {
             return new BookCalculation(_remainingItems, _subTotals);
