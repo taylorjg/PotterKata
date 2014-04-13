@@ -65,10 +65,10 @@ namespace Code
             return newBookCalculations;
         }
 
-        private BookCalculation CreateNewBookCalculation(IEnumerable<char> setOfBooks, Func<IEnumerable<char>, double> calculateSubTotalForSetOfBooks)
+        private BookCalculation CreateNewBookCalculation(IEnumerable<char> setOfBooks, Func<IEnumerable<char>, double> subTotalCalculator)
         {
             var setOfBooksList = setOfBooks.ToList();
-            var subTotalValue = calculateSubTotalForSetOfBooks(setOfBooksList);
+            var subTotalValue = subTotalCalculator(setOfBooksList);
             return CloneWithAdditionalSubTotal(setOfBooksList, subTotalValue);
         }
 
