@@ -38,13 +38,15 @@ namespace Code
             foreach (var book in setOfBooksAsArray) _remainingItems.Remove(book);
         }
 
-        public IEnumerable<BookCalculation> ProcessCombinations()
+        public IList<BookCalculation> FindSingleDiscountCombinations()
         {
             var combinations =
                 Enumerable.Range(2, 5)
                           .Aggregate(
                               Enumerable.Empty<IEnumerable<char>>(),
-                              (acc, i) => acc.Concat(Enumerable.Repeat(_remainingItems, i).Combinations()))
+                              (acc, i) => acc.Concat(Enumerable
+                                  .Repeat(_remainingItems, i)
+                                  .Combinations()))
                           .ToList();
 
             if (combinations.Any())
@@ -76,7 +78,7 @@ namespace Code
                 AddSubTotal(_remainingItems, subTotal);
             }
 
-            return Enumerable.Empty<BookCalculation>();
+            return new List<BookCalculation>();
         }
     }
 }

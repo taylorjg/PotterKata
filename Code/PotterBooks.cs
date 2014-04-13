@@ -41,16 +41,16 @@ namespace Code
 
                 foreach (var bookCalculation in bookCalculations)
                 {
-                    var newBookCalculations = bookCalculation.ProcessCombinations().ToList();
+                    var newBookCalculations = bookCalculation.FindSingleDiscountCombinations();
                     if (newBookCalculations.Any())
                     {
-                        bookCalculationsToAdd.AddRange(newBookCalculations);
                         bookCalculationsToRemove.Add(bookCalculation);
+                        bookCalculationsToAdd.AddRange(newBookCalculations);
                         done = false;
                     }
                 }
 
-                foreach (var bookCalculation in bookCalculationsToRemove) bookCalculations.Remove(bookCalculation);
+                bookCalculations.RemoveRange(bookCalculationsToRemove);
                 bookCalculations.AddRange(bookCalculationsToAdd);
 
                 if (done) break;
