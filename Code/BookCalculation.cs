@@ -6,7 +6,7 @@ namespace Code
 {
     public class BookCalculation
     {
-        private readonly ICollection<char> _remainingItems;
+        private readonly IList<char> _remainingItems;
         private readonly IList<Tuple<string, double>> _subTotals;
 
         public BookCalculation(IEnumerable<char> remainingBooks)
@@ -35,7 +35,7 @@ namespace Code
         {
             var setOfBooksAsArray = setOfBooks.ToArray();
             _subTotals.Add(Tuple.Create(new string(setOfBooksAsArray), subTotal));
-            foreach (var book in setOfBooksAsArray) _remainingItems.Remove(book);
+            _remainingItems.RemoveRange(setOfBooksAsArray);
         }
 
         public IList<BookCalculation> FindSingleDiscountCombinations()
