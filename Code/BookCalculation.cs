@@ -77,7 +77,8 @@ namespace Code
             var newRemainingBooks = new List<char>(_remainingBooks);
             newRemainingBooks.RemoveRange(setOfBooks);
             var newSubTotal = CreateSubTotal(setOfBooks, subTotalValue);
-            return new BookCalculation(newRemainingBooks, _subTotals.Concat(new[] { newSubTotal }));
+            var newSubTotals = _subTotals.Concat(new[] {newSubTotal});
+            return new BookCalculation(newRemainingBooks, newSubTotals);
         }
 
         private static Tuple<string, double> CreateSubTotal(IEnumerable<char> setOfBooks, double subTotalValue)
