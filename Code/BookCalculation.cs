@@ -83,7 +83,7 @@ namespace Code
                 AddSubTotal(_remainingItems, subTotal);
             }
 
-            return new List<BookCalculation>();
+            return new List<BookCalculation> {this};
         }
     }
 }

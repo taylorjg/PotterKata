@@ -43,12 +43,9 @@ namespace Code
                 foreach (var bookCalculation in bookCalculations.Where(x => !x.IsDone))
                 {
                     var newBookCalculations = bookCalculation.FindSingleDiscountCombinations();
-                    if (newBookCalculations.Any())
-                    {
-                        bookCalculationsToRemove.Add(bookCalculation);
-                        bookCalculationsToAdd.AddRange(newBookCalculations);
-                        done = false;
-                    }
+                    bookCalculationsToRemove.Add(bookCalculation);
+                    bookCalculationsToAdd.AddRange(newBookCalculations);
+                    done = false;
                 }
 
                 bookCalculations.RemoveRange(bookCalculationsToRemove);
