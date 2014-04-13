@@ -6,19 +6,19 @@ namespace Code
 {
     public class BookCalculation
     {
-        private readonly IList<char> _remainingItems;
+        private readonly IEnumerable<char> _remainingBooks;
         private readonly IList<Tuple<string, double>> _subTotals;
 
         public BookCalculation(IEnumerable<char> remainingBooks)
         {
-            _remainingItems = new List<char>(remainingBooks);
+            _remainingBooks = remainingBooks;
             _subTotals = new List<Tuple<string, double>>();
         }
 
-        private BookCalculation(IEnumerable<char> remainingBooks, IEnumerable<Tuple<string, double>> items)
+        private BookCalculation(IEnumerable<char> remainingBooks, IEnumerable<Tuple<string, double>> subTotals)
         {
-            _remainingItems = new List<char>(remainingBooks);
-            _subTotals = new List<Tuple<string, double>>(items);
+            _remainingBooks = remainingBooks;
+            _subTotals = new List<Tuple<string, double>>(subTotals);
         }
 
         public double Total
@@ -28,29 +28,29 @@ namespace Code
 
         public bool IsDone
         {
-            get { return !_remainingItems.Any(); }
+            get { return !_remainingBooks.Any(); }
         }
 
-        public BookCalculation Clone()
+        public BookCalculation Clone(IEnumerable<char> remainingBooks)
         {
-            return new BookCalculation(_remainingItems, _subTotals);
+            return new BookCalculation(remainingBooks, _subTotals);
         }
 
         private void AddSubTotal(IEnumerable<char> setOfBooks, double subTotal)
         {
-            var setOfBooksAsArray = setOfBooks.ToArray();
-            _subTotals.Add(Tuple.Create(new string(setOfBooksAsArray), subTotal));
-            _remainingItems.RemoveRange(setOfBooksAsArray);
+            _subTotals.Add(Tuple.Create(new string(setOfBooks.ToArray()), subTotal));
         }
 
         public IList<BookCalculation> FindSingleDiscountCombinations()
         {
+            var newBookCalculations = new List<BookCalculation>();
+
             var combinations =
                 Enumerable.Range(2, 5)
                           .Aggregate(
                               Enumerable.Empty<IEnumerable<char>>(),
                               (acc, i) => acc.Concat(Enumerable
-                                  .Repeat(_remainingItems, i)
+                                  .Repeat(_remainingBooks, i)
                                   .Combinations()))
                           .ToList();
 
@@ -63,27 +63,30 @@ namespace Code
                     combinations = combinations.Where(x => x.Count() >= 4).ToList();
                 }
 
-                var newBookCalculations = new List<BookCalculation>();
-
                 foreach (var setOfBooks in combinations.Select(x => x.ToList()))
                 {
-                    var subTotal = PotterBooks.CalculateSubTotalForSetOfDifferentBooks(setOfBooks);
-                    var newBookCalculation = Clone();
-                    newBookCalculation.AddSubTotal(setOfBooks, subTotal);
+                    var newBookCalculation = CreateNewBookCalculation(setOfBooks, PotterBooks.CalculateSubTotalForSetOfDifferentBooks);
                     newBookCalculations.Add(newBookCalculation);
                 }
-
-                return newBookCalculations;
             }
-
-            var numBooks = _remainingItems.Count();
-            if (numBooks > 0)
+            else
             {
-                var subTotal = numBooks * PotterBooks.UnitBookPrice;
-                AddSubTotal(_remainingItems, subTotal);
+                var setOfBooks = _remainingBooks.ToList();
+                var newBookCalculation = CreateNewBookCalculation(setOfBooks, PotterBooks.CalculateSubTotalForSetOfSameBooks);
+                newBookCalculations.Add(newBookCalculation);
             }
 
-            return new List<BookCalculation> {this};
+            return newBookCalculations;
+        }
+
+        private BookCalculation CreateNewBookCalculation(IList<char> setOfBooks, Func<IEnumerable<char>, double> func)
+        {
+            var newRemainingBooks = new List<char>(_remainingBooks);
+            newRemainingBooks.RemoveRange(setOfBooks);
+            var subTotal = func(setOfBooks);
+            var newBookCalculation = Clone(newRemainingBooks);
+            newBookCalculation.AddSubTotal(setOfBooks, subTotal);
+            return newBookCalculation;
         }
     }
 }

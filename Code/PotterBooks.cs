@@ -23,9 +23,21 @@ namespace Code
             var setOfBooksAsList = setOfBooks.ToList();
             var numBooks = setOfBooksAsList.Count();
             var numDistinctBooks = setOfBooksAsList.Distinct().Count();
+            Debug.Assert(numBooks > 1);
             Debug.Assert(numBooks == numDistinctBooks);
             var percentDiscount = NumDifferentBooks2PercentDiscount[numBooks];
             var subTotal = (numBooks * UnitBookPrice).PercentOff(percentDiscount);
+            return subTotal;
+        }
+
+        internal static double CalculateSubTotalForSetOfSameBooks(IEnumerable<char> setOfBooks)
+        {
+            var setOfBooksAsList = setOfBooks.ToList();
+            var numBooks = setOfBooksAsList.Count();
+            var numDistinctBooks = setOfBooksAsList.Distinct().Count();
+            Debug.Assert(numBooks > 0);
+            Debug.Assert(numDistinctBooks == 1);
+            var subTotal = (numBooks * UnitBookPrice);
             return subTotal;
         }
 
